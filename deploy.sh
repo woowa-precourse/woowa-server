@@ -5,7 +5,8 @@ DOCKER_USERNAME="xioz19"
 DOCKER_IMAGE="weathercodi"
 EC2_USER="ubuntu"
 EC2_HOST="13.209.81.109"
-SSH_KEY="woowa.pem"
+SSH_KEY="~/.ssh/woowa.pem"
+REMOTE_APP_PATH="/home/ubuntu/weathercodi"
 
 echo "========================================"
 echo " 🚀 WeatherCodi Deploy Script Started"
@@ -43,19 +44,30 @@ if [ $? -ne 0 ]; then
 fi
 
 ### === 5) EC2 Deploy === ###
-echo "🔗 Step 5: Connecting to EC2 and Restarting Container..."
+echo "📂 Step 5: Uploading docker-compose.yml to EC2..."
+scp -i ${SSH_KEY} docker-compose.yml ${EC2_USER}@${EC2_HOST}:${REMOTE_APP_PATH}/docker-compose.yml
 
-ssh -i ${SSH_KEY} ${EC2_USER}@${EC2_HOST} << 'EOF'
-  echo "⬇️ Pulling latest image..."
-  docker pull xioz19/weathercodi:latest
+### === 6) EC2 서버에 접속하여 Compose 재배포 === ###
+echo "🔗 Step 6: Connect to EC2 and Deploy with Compose..."
 
-  echo "🧹 Removing old container..."
-  docker rm -f weathercodi-server || true
+ssh -i ${SSH_KEY} ${EC2_USER}@${EC2_HOST} << EOF
+  cd ${REMOTE_APP_PATH}
 
-  echo "🚀 Starting new container..."
-  docker run -d -p 8080:8080 --name weathercodi-server xioz19/weathercodi:latest
+  echo "⬇️ Pulling latest app image..."
+  docker-compose pull
+
+  echo "🧹 Stopping old containers..."
+  docker-compose down
+
+  echo "🚀 Starting new containers..."
+  docker-compose up -d
+
+  echo "🎉 Deployment Done!"
 EOF
 
-echo "✅ Deployment Completed Successfully!"
-echo "🌐 Access your app at: http://${EC2_HOST}:8080"
+
+echo "========================================"
+echo " ✅ Deployment Completed Successfully!"
+echo " 🌐 Access your API at: http://${EC2_HOST}:8080"
+echo "========================================"
 
