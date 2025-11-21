@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.woowa.weathercodi.clothes.domain.Category
 import org.woowa.weathercodi.clothes.domain.Clothes
+import org.woowa.weathercodi.clothes.domain.ClothesRepository
 import org.woowa.weathercodi.clothes.domain.SubCategory
 
 class ClothesServiceTest {

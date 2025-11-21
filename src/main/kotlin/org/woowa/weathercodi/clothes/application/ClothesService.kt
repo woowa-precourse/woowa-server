@@ -6,11 +6,11 @@ import org.woowa.weathercodi.clothes.presentation.ClothesRegisterRequest
 import org.woowa.weathercodi.user.application.UserDeviceService
 
 class ClothesService(
-    private val clothesRepository: ClothesRepository,
+    private val repo: ClothesRepository,
     private val userDeviceService: UserDeviceService,
 ) {
 
-    fun registerClothes(deviceUuid: String, clothes: ClothesRegisterRequest, image: String): Clothes {
+    fun create(deviceUuid: String, clothes: ClothesRegisterRequest, image: String): Clothes {
 
         val user = userDeviceService.getByDeviceUuid(deviceUuid)
             ?: throw IllegalArgumentException("User not found")
@@ -23,14 +23,14 @@ class ClothesService(
             subCategory = clothes.subCategory,
         )
 
-        return clothesRepository.save(newClothes)
+        return repo.save(newClothes)
     }
 
     fun updateClothes(deviceUuid: String, request: ClothesRegisterRequest, clothesId: Long): Clothes {
         val user = userDeviceService.getByDeviceUuid(deviceUuid)
             ?: throw IllegalArgumentException("User not found")
 
-        val existing = clothesRepository.findById(clothesId)
+        val existing = repo.findById(clothesId)
             ?: throw IllegalArgumentException("Clothes not found")
 
         if (existing.userId != user.id) {
@@ -42,6 +42,9 @@ class ClothesService(
             subCategory = request.subCategory
         )
 
-        return clothesRepository.save(updated)
+        return repo.save(updated)
     }
+
+    fun getAll(userId: Long): List<Clothes> =
+        repo.findByUserId(userId)
 }
