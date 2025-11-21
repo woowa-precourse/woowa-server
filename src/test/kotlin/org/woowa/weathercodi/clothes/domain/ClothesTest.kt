@@ -32,7 +32,6 @@ class ClothesTest {
         )
 
         val updated = clothes.update(
-            image = "new_photo",
             category = Category.OUTER,
             subCategory = SubCategory.COAT
         )
