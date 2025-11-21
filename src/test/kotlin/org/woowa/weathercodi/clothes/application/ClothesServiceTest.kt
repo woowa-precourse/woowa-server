@@ -70,12 +70,11 @@ class ClothesServiceTest {
 
         val updated = service.update(
             id = saved.id!!,
-            image = "new",
             category = Category.OUTER,
             subCategory = SubCategory.COAT
         )
 
-        assertThat(updated.image).isEqualTo("new")
+        assertThat(updated.subCategory).isEqualTo(SubCategory.COAT)
         assertThat(updated.category).isEqualTo(Category.OUTER)
     }
 }
