@@ -9,6 +9,19 @@ class ClothesRepositoryTest(
 ) {
 
     @Test
+    fun `사용자 소유 옷 전체를 조회한다`() {
+        jpa.save(ClothesJpaEntity(null, 1L, "p1", Category.TOP, SubCategory.SHORT_SLEEVE))
+        jpa.save(ClothesJpaEntity(null, 1L, "p2", Category.BOTTOM, SubCategory.JEANS))
+        jpa.save(ClothesJpaEntity(null, 1L, "p3", Category.OUTER, SubCategory.COAT))
+        jpa.save(ClothesJpaEntity(null, 2L, "p4", Category.TOP, SubCategory.SHORT_SLEEVE))
+
+        val result = jpa.findByUserId(1L)
+
+        assertThat(result).hasSize(3)
+        assertThat(result.map { it.photo }).containsExactlyInAnyOrder("p1", "p2", "p3")
+    }
+
+    @Test
     fun `사용자 소유 옷을 카테고리별로 조회한다`() {
         jpa.save(ClothesJpaEntity(null, 1L, "p1", Category.TOP, SubCategory.SHORT_SLEEVE))
         jpa.save(ClothesJpaEntity(null, 1L, "p2", Category.BOTTOM, SubCategory.JEANS))

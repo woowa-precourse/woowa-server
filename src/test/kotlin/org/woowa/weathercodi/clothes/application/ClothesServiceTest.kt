@@ -9,6 +9,19 @@ class ClothesServiceTest {
     private val service = ClothesService(repo)
 
     @Test
+    fun `사용자 소유 옷 전체를 조회한다`() {
+        repo.save(Clothes(null, 1L, "p1", Category.TOP, SubCategory.SHORT_SLEEVE))
+        repo.save(Clothes(null, 1L, "p2", Category.BOTTOM, SubCategory.JEANS))
+        repo.save(Clothes(null, 1L, "p3", Category.OUTER, SubCategory.COAT))
+        repo.save(Clothes(null, 2L, "p4", Category.TOP, SubCategory.SHORT_SLEEVE))
+
+        val result = service.getAll(1L)
+
+        assertThat(result).hasSize(3)
+        assertThat(result.map { it.photo }).containsExactlyInAnyOrder("p1", "p2", "p3")
+    }
+
+    @Test
     fun `사용자 소유 옷을 카테고리별로 조회한다`() {
         repo.save(Clothes(null, 1L, "p1", Category.TOP, SubCategory.SHORT_SLEEVE))
         repo.save(Clothes(null, 1L, "p2", Category.BOTTOM, SubCategory.JEANS))
@@ -76,6 +89,9 @@ class FakeClothesRepository : ClothesRepository {
 
     override fun findById(id: Long): Clothes? =
         store[id]
+
+    override fun findByUserId(userId: Long): List<Clothes> =
+        store.values.filter { it.userId == userId }
 
     override fun save(clothes: Clothes): Clothes {
         val id = clothes.id ?: seq++
