@@ -32,6 +32,9 @@ dependencies {
 
     // swagger
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+
+	// test용 h2 DB
+	implementation("com.h2database:h2")
 }
 
 kotlin {
