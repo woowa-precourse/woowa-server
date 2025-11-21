@@ -8,14 +8,13 @@ class Clothes (
     val subCategory: SubCategory,
 ) {
     fun update(
-        image: String,
         category: Category,
         subCategory: SubCategory
     ): Clothes {
         return Clothes(
             id = this.id,
             userId = this.userId,
-            image = image,
+            image = this.image,
             category = category,
             subCategory = subCategory
         )

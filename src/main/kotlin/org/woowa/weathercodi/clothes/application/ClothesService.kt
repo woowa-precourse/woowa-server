@@ -26,7 +26,7 @@ class ClothesService(
         return clothesRepository.save(newClothes)
     }
 
-    fun updateClothes(deviceUuid: String, request: ClothesRegisterRequest, imageUrl: String, clothesId: Long): Clothes {
+    fun updateClothes(deviceUuid: String, request: ClothesRegisterRequest, clothesId: Long): Clothes {
         val user = userDeviceService.getByDeviceUuid(deviceUuid)
             ?: throw IllegalArgumentException("User not found")
 
@@ -38,7 +38,6 @@ class ClothesService(
         }
 
         val updated = existing.update(
-            image = imageUrl,
             category = request.category,
             subCategory = request.subCategory
         )
