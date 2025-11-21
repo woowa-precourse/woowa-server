@@ -2,6 +2,9 @@ package org.woowa.weathercodi.clothes.application
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.woowa.weathercodi.clothes.domain.Category
+import org.woowa.weathercodi.clothes.domain.Clothes
+import org.woowa.weathercodi.clothes.domain.SubCategory
 
 class ClothesServiceTest {
 
@@ -10,10 +13,10 @@ class ClothesServiceTest {
 
     @Test
     fun `사용자 소유 옷 전체를 조회한다`() {
-        repo.save(Clothes(null, 1L, "p1", Category.TOP, SubCategory.SHORT_SLEEVE))
+        repo.save(Clothes(null, 1L, "p1", Category.TOP, SubCategory.SHORT_SLEEVE_TEE))
         repo.save(Clothes(null, 1L, "p2", Category.BOTTOM, SubCategory.JEANS))
         repo.save(Clothes(null, 1L, "p3", Category.OUTER, SubCategory.COAT))
-        repo.save(Clothes(null, 2L, "p4", Category.TOP, SubCategory.SHORT_SLEEVE))
+        repo.save(Clothes(null, 2L, "p4", Category.TOP, SubCategory.SHORT_SLEEVE_TEE))
 
         val result = service.getAll(1L)
 
