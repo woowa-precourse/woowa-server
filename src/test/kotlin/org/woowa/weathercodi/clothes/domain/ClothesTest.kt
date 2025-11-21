@@ -10,13 +10,13 @@ class ClothesTest {
         val clothes = Clothes(
             id = null,
             userId = 1L,
-            photo = "photo_url",
+            image = "photo_url",
             category = Category.TOP,
             subCategory = SubCategory.SHORT_SLEEVE_TEE
         )
 
         assertThat(clothes.userId).isEqualTo(1L)
-        assertThat(clothes.photo).isEqualTo("photo_url")
+        assertThat(clothes.image).isEqualTo("photo_url")
         assertThat(clothes.category).isEqualTo(Category.TOP)
         assertThat(clothes.subCategory).isEqualTo(SubCategory.SHORT_SLEEVE_TEE)
     }
@@ -26,18 +26,18 @@ class ClothesTest {
         val clothes = Clothes(
             id = 1L,
             userId = 1L,
-            photo = "old_photo",
+            image = "old_photo",
             category = Category.TOP,
             subCategory = SubCategory.SHORT_SLEEVE_TEE
         )
 
         val updated = clothes.update(
-            photo = "new_photo",
+            image = "new_photo",
             category = Category.OUTER,
             subCategory = SubCategory.COAT
         )
 
-        assertThat(updated.photo).isEqualTo("new_photo")
+        assertThat(updated.image).isEqualTo("new_photo")
         assertThat(updated.category).isEqualTo(Category.OUTER)
         assertThat(updated.subCategory).isEqualTo(SubCategory.COAT)
     }

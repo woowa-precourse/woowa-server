@@ -18,7 +18,7 @@ class ClothesServiceTest {
         val result = service.getAll(1L)
 
         assertThat(result).hasSize(3)
-        assertThat(result.map { it.photo }).containsExactlyInAnyOrder("p1", "p2", "p3")
+        assertThat(result.map { it.image }).containsExactlyInAnyOrder("p1", "p2", "p3")
     }
 
     @Test
@@ -30,7 +30,7 @@ class ClothesServiceTest {
         val result = service.getByCategory(1L, Category.TOP)
 
         assertThat(result).hasSize(1)
-        assertThat(result[0].photo).isEqualTo("p1")
+        assertThat(result[0].image).isEqualTo("p1")
     }
 
     @Test
@@ -39,7 +39,7 @@ class ClothesServiceTest {
 
         val result = service.getDetail(saved.id!!)
 
-        assertThat(result.photo).isEqualTo("photo")
+        assertThat(result.image).isEqualTo("photo")
         assertThat(result.category).isEqualTo(Category.TOP)
     }
 
@@ -47,13 +47,13 @@ class ClothesServiceTest {
     fun `옷 등록`() {
         val result = service.create(
             userId = 1L,
-            photo = "p",
+            image = "p",
             category = Category.TOP,
             subCategory = SubCategory.SHORT_SLEEVE
         )
 
         assertThat(result.id).isNotNull()
-        assertThat(result.photo).isEqualTo("p")
+        assertThat(result.image).isEqualTo("p")
     }
 
     @Test
@@ -70,12 +70,12 @@ class ClothesServiceTest {
 
         val updated = service.update(
             id = saved.id!!,
-            photo = "new",
+            image = "new",
             category = Category.OUTER,
             subCategory = SubCategory.COAT
         )
 
-        assertThat(updated.photo).isEqualTo("new")
+        assertThat(updated.image).isEqualTo("new")
         assertThat(updated.category).isEqualTo(Category.OUTER)
     }
 }

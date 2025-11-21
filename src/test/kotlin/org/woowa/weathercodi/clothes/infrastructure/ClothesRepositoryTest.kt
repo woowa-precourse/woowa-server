@@ -18,7 +18,7 @@ class ClothesRepositoryTest(
         val result = jpa.findByUserId(1L)
 
         assertThat(result).hasSize(3)
-        assertThat(result.map { it.photo }).containsExactlyInAnyOrder("p1", "p2", "p3")
+        assertThat(result.map { it.image }).containsExactlyInAnyOrder("p1", "p2", "p3")
     }
 
     @Test
@@ -30,7 +30,7 @@ class ClothesRepositoryTest(
         val result = jpa.findByUserIdAndCategory(1L, Category.TOP)
 
         assertThat(result).hasSize(1)
-        assertThat(result[0].photo).isEqualTo("p1")
+        assertThat(result[0].image).isEqualTo("p1")
     }
 
     @Test
@@ -41,7 +41,7 @@ class ClothesRepositoryTest(
 
         val found = jpa.findById(saved.id!!).get()
 
-        assertThat(found.photo).isEqualTo("photo")
+        assertThat(found.image).isEqualTo("photo")
         assertThat(found.category).isEqualTo(Category.TOP)
     }
 
