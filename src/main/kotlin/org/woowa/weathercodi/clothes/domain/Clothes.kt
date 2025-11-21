@@ -1,6 +1,6 @@
 package org.woowa.weathercodi.clothes.domain
 
-class Clothes (
+data class Clothes (
     val id: Long? = null,
     val userId: Long,
     val image: String,
