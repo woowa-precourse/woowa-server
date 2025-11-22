@@ -31,10 +31,14 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // swagger
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
 
 	// test용 h2 DB
 	implementation("com.h2database:h2")
+
+	// S3
+	implementation("software.amazon.awssdk:s3:2.25.47")
+	implementation("software.amazon.awssdk:auth:2.25.47")
 }
 
 kotlin {
