@@ -5,7 +5,7 @@ DOCKER_USERNAME="xioz19"
 DOCKER_IMAGE="weathercodi"
 EC2_USER="ubuntu"
 EC2_HOST="13.209.81.109"
-SSH_KEY="~/.ssh/woowa.pem"
+SSH_KEY="/Users/hongsieun/developer/WOOWA/team-pjt/woowa.pem"
 REMOTE_APP_PATH="/home/ubuntu/weathercodi"
 
 echo "========================================"
