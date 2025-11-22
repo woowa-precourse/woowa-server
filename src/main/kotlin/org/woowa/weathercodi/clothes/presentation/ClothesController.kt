@@ -21,30 +21,34 @@ class ClothesController(
     @PostMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun createClothes(
         @RequestHeader("X-DEVICE-ID") deviceUuid: String,
-        @RequestPart("image", required = true) image: MultipartFile,
-        @RequestPart("data", required = true) request: ClothesRegisterRequest
+        @RequestPart("image") image: MultipartFile,
+        @RequestParam category: Category,
+        @RequestParam subCategory: SubCategory
     ): ClothesResponse {
         val imageUrl = imageStorageService.uploadClothesImage(deviceUuid, image)
 
         val saved = clothesService.create(
             deviceUuid = deviceUuid,
-            clothes = request,
+            category,
+            subCategory,
             image = imageUrl
         )
 
         return ClothesResponse.from(saved)
     }
 
-    @PutMapping("/{clothesId}", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    @PutMapping("/{clothesId}")
     fun updateClothes(
         @RequestHeader("X-DEVICE-ID") deviceUuid: String,
         @PathVariable clothesId: Long,
-        @RequestPart("data") request: ClothesRegisterRequest,
+        @RequestParam category: Category,
+        @RequestParam subCategory: SubCategory
     ): ClothesResponse {
 
         val updated = clothesService.updateClothes(
             deviceUuid = deviceUuid,
-            request = request,
+            category,
+            subCategory,
             clothesId = clothesId,
         )
 
@@ -69,6 +73,20 @@ class ClothesController(
         )
 
         return clothes.map { ClothesResponse.from(it) }
+    }
+
+    @GetMapping("/{clothesId}")
+    fun getClothesDetail(
+        @RequestHeader("X-DEVICE-ID") deviceUuid: String,
+        @PathVariable clothesId: Long
+    ): ClothesResponse {
+
+        val clothes = clothesService.getClothesDetail(
+            deviceUuid = deviceUuid,
+            clothesId = clothesId
+        )
+
+        return ClothesResponse.from(clothes)
     }
 
     @DeleteMapping("/{clothesId}")

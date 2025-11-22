@@ -17,21 +17,21 @@ class ClothesService(
     private val imageStorageService: ImageStorageService,
 ) {
 
-    fun create(deviceUuid: String, clothes: ClothesRegisterRequest, image: String): Clothes {
+    fun create(deviceUuid: String, category: Category, subCategory: SubCategory, image: String): Clothes {
         val user = userDeviceService.registerOrUpdateDevice(deviceUuid)
 
         val newClothes = Clothes(
             id = null,
             userId = user.id!!,
             image = image,
-            category = clothes.category,
-            subCategory = clothes.subCategory,
+            category = category,
+            subCategory = subCategory,
         )
 
         return repo.save(newClothes)
     }
 
-    fun updateClothes(deviceUuid: String, request: ClothesRegisterRequest, clothesId: Long): Clothes {
+    fun updateClothes(deviceUuid: String, category: Category, subCategory: SubCategory, clothesId: Long): Clothes {
         val user = userDeviceService.getByDeviceUuid(deviceUuid)
             ?: throw IllegalArgumentException("User not found")
 
@@ -42,8 +42,8 @@ class ClothesService(
             throw IllegalAccessException("Cannot modify clothes of another user")
 
         val updated = existing.update(
-            category = request.category,
-            subCategory = request.subCategory
+            category = category,
+            subCategory = subCategory
         )
 
         return repo.save(updated)
@@ -66,6 +66,20 @@ class ClothesService(
         if (cursor != null) list = list.filter { (it.id ?: 0) > cursor }
 
         return list.sortedBy { it.id }.take(size)
+    }
+
+    fun getClothesDetail(deviceUuid: String, clothesId: Long): Clothes {
+        val user = userDeviceService.getByDeviceUuid(deviceUuid)
+            ?: throw IllegalArgumentException("User not found")
+
+        val clothes = repo.findById(clothesId)
+            ?: throw IllegalArgumentException("Clothes not found")
+
+        if (clothes.userId != user.id) {
+            throw IllegalAccessException("Cannot view clothes of another user")
+        }
+
+        return clothes
     }
 
     @Transactional
