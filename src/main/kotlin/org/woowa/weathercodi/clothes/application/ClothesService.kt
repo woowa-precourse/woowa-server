@@ -7,6 +7,8 @@ import org.woowa.weathercodi.clothes.domain.Clothes
 import org.woowa.weathercodi.clothes.domain.ClothesRepository
 import org.woowa.weathercodi.clothes.domain.SubCategory
 import org.woowa.weathercodi.clothes.presentation.ClothesRegisterRequest
+import org.woowa.weathercodi.global.exception.CustomException
+import org.woowa.weathercodi.global.exception.ErrorCode
 import org.woowa.weathercodi.global.s3.ImageStorageService
 import org.woowa.weathercodi.user.application.UserDeviceService
 
@@ -33,13 +35,13 @@ class ClothesService(
 
     fun updateClothes(deviceUuid: String, category: Category, subCategory: SubCategory, clothesId: Long): Clothes {
         val user = userDeviceService.getByDeviceUuid(deviceUuid)
-            ?: throw IllegalArgumentException("User not found")
+            ?: throw CustomException(ErrorCode.USER_NOT_FOUND)
 
         val existing = repo.findById(clothesId)
-            ?: throw IllegalArgumentException("Clothes not found")
+            ?: throw CustomException(ErrorCode.CLOTHES_NOT_FOUND)
 
         if (existing.userId != user.id)
-            throw IllegalAccessException("Cannot modify clothes of another user")
+            throw throw CustomException(ErrorCode.ACCESS_DENIED)
 
         val updated = existing.update(
             category = category,
@@ -70,13 +72,13 @@ class ClothesService(
 
     fun getClothesDetail(deviceUuid: String, clothesId: Long): Clothes {
         val user = userDeviceService.getByDeviceUuid(deviceUuid)
-            ?: throw IllegalArgumentException("User not found")
+            ?: throw CustomException(ErrorCode.USER_NOT_FOUND)
 
         val clothes = repo.findById(clothesId)
-            ?: throw IllegalArgumentException("Clothes not found")
+            ?: throw CustomException(ErrorCode.CLOTHES_NOT_FOUND)
 
         if (clothes.userId != user.id) {
-            throw IllegalAccessException("Cannot view clothes of another user")
+            throw CustomException(ErrorCode.ACCESS_DENIED)
         }
 
         return clothes
@@ -85,13 +87,13 @@ class ClothesService(
     @Transactional
     fun deleteClothes(deviceUuid: String, clothesId: Long) {
         val user = userDeviceService.getByDeviceUuid(deviceUuid)
-            ?: throw IllegalArgumentException("User not found")
+            ?: throw CustomException(ErrorCode.USER_NOT_FOUND)
 
         val clothes = repo.findById(clothesId)
-            ?: throw IllegalArgumentException("Clothes not found")
+            ?: throw CustomException(ErrorCode.CLOTHES_NOT_FOUND)
 
         if (clothes.userId != user.id)
-            throw IllegalAccessException("Cannot delete clothes of another user")
+            throw CustomException(ErrorCode.ACCESS_DENIED)
 
         imageStorageService.deleteFile(clothes.image)
 
