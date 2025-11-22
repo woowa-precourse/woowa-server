@@ -19,4 +19,16 @@ enum class ErrorCode (
         HttpStatus.NOT_FOUND,
         "존재하지 않는 옷 번호입니다."
     ),
+    OUTFIT_NOT_FOUND(
+        HttpStatus.NOT_FOUND,
+        "존재하지 않는 코디입니다."
+    ),
+    CLOTHES_NOT_REGISTERED(
+        HttpStatus.BAD_REQUEST,
+        "등록되지 않은 옷입니다."
+    ),
+    INVALID_OUTFIT_CATEGORY(
+        HttpStatus.BAD_REQUEST,
+        "유효하지 않은 코디 카테고리입니다."
+    ),
 }
