@@ -6,38 +6,41 @@ import org.junit.jupiter.api.Test
 class OutfitTest {
 
     @Test
-    fun `코디 생성 시 카테고리와 fixed 기본값이 정상적으로 설정된다`() {
+    fun `코디 생성 시 필드가 정상적으로 설정된다`() {
         val outfit = Outfit(
+            id = null,
+            userId = 1L,
             category = OutfitCategory.SUMMER,
             fixed = false,
             thumbnail = "http://image"
         )
 
+        assertThat(outfit.userId).isEqualTo(1L)
         assertThat(outfit.category).isEqualTo(OutfitCategory.SUMMER)
         assertThat(outfit.fixed).isFalse()
         assertThat(outfit.thumbnail).isEqualTo("http://image")
     }
 
     @Test
-    fun `코디에 OutfitClothes 를 추가할 수 있다`() {
+    fun `코디 수정 시 원하는 필드만 변경할 수 있다`() {
         val outfit = Outfit(
+            id = 1L,
+            userId = 1L,
             category = OutfitCategory.SUMMER,
             fixed = false,
-            thumbnail = "http://image"
+            thumbnail = "http://old-image"
         )
 
-        val outfitClothes = OutfitClothes(
-            clothesId = 1L,
-            image = "http://aaa",
-            xCoord = 10.0,
-            yCoord = 20.0,
-            zIndex = 1,
-            scale = 1.0
+        val updated = outfit.update(
+            category = OutfitCategory.WINTER,
+            fixed = true,
+            thumbnail = "http://new-image"
         )
 
-        outfit.addClothes(outfitClothes)
-
-        assertThat(outfit.clothes).hasSize(1)
-        assertThat(outfit.clothes[0].clothesId).isEqualTo(1L)
+        assertThat(updated.id).isEqualTo(1L)
+        assertThat(updated.userId).isEqualTo(1L)
+        assertThat(updated.category).isEqualTo(OutfitCategory.WINTER)
+        assertThat(updated.fixed).isTrue()
+        assertThat(updated.thumbnail).isEqualTo("http://new-image")
     }
 }
