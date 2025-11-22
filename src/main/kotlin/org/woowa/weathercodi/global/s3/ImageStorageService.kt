@@ -31,6 +31,22 @@ class ImageStorageService(
         return "https://${awsProperties.s3.bucket}.s3.amazonaws.com/$key"
     }
 
+    fun uploadOutfitThumbnail(deviceId: String, file: MultipartFile): String {
+        val fileName = "${UUID.randomUUID()}.${file.originalFilename?.substringAfterLast('.') ?: "jpg"}"
+
+        val key = "outfits/$deviceId/$fileName"
+
+        val putObjectRequest = PutObjectRequest.builder()
+            .bucket(awsProperties.s3.bucket)
+            .key(key)
+            .contentType(file.contentType)
+            .build()
+
+        s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.bytes))
+
+        return "https://${awsProperties.s3.bucket}.s3.amazonaws.com/$key"
+    }
+
     fun deleteFile(fileUrl: String) {
         val bucket = awsProperties.s3.bucket
         val key = fileUrl.substringAfter("$bucket.s3.amazonaws.com/")

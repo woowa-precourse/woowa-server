@@ -19,7 +19,7 @@ class OutfitServiceTest {
     }
 
     @Test
-    fun `코디 목록 조회 시 고정 코디와 일반 코디가 구분되어 반환된다`() {
+    fun `코디 목록 조회 시 고정 코디와 일반 코디가 모두 반환된다`() {
         val userId = 1L
         outfitRepo.save(Outfit(id = 1L, userId = userId, category = OutfitCategory.SUMMER, fixed = true, thumbnail = "https://fixed1"))
         outfitRepo.save(Outfit(id = 2L, userId = userId, category = OutfitCategory.WINTER, fixed = true, thumbnail = "https://fixed2"))
@@ -28,44 +28,45 @@ class OutfitServiceTest {
 
         val result = service.getOutfitList(userId)
 
-        assertThat(result.fixedOutfits).hasSize(2)
-        assertThat(result.outfits).hasSize(2)
-        assertThat(result.fixedOutfits[0].thumbnail).contains("fixed")
+        assertThat(result).hasSize(4)
+        assertThat(result.filter { it.fixed }).hasSize(2)
+        assertThat(result.filter { !it.fixed }).hasSize(2)
     }
 
     @Test
-    fun `코디 상세 조회 시 옷 리스트가 등록 최신순으로 반환된다`() {
+    fun `코디 상세 조회 시 Outfit과 OutfitClothes가 함께 반환된다`() {
         val outfitId = 1L
         outfitRepo.save(Outfit(id = outfitId, userId = 1L, category = OutfitCategory.SUMMER, fixed = false, thumbnail = "https://thumb"))
 
         outfitClothesRepo.save(OutfitClothes(id = 1L, outfitId = outfitId, clothesId = 10L, image = "https://clothes1", xCoord = 1.0, yCoord = 2.0, zIndex = 1, scale = 1.0))
         outfitClothesRepo.save(OutfitClothes(id = 2L, outfitId = outfitId, clothesId = 20L, image = "https://clothes2", xCoord = 3.0, yCoord = 4.0, zIndex = 2, scale = 1.5))
 
-        val result = service.getOutfit(outfitId)
+        val (outfit, clothes) = service.getOutfit(outfitId)
 
-        assertThat(result.id).isEqualTo(outfitId)
-        assertThat(result.category).isEqualTo("summer")
-        assertThat(result.clothes).hasSize(2)
-        assertThat(result.clothes[0].id).isEqualTo(2L)
+        assertThat(outfit.id).isEqualTo(outfitId)
+        assertThat(outfit.category).isEqualTo(OutfitCategory.SUMMER)
+        assertThat(clothes).hasSize(2)
+        assertThat(clothes[0].id).isEqualTo(2L)
     }
 
     @Test
     fun `코디 등록 시 Outfit과 OutfitClothes가 함께 저장된다`() {
         val userId = 1L
-        val request = CreateOutfitRequest(
-            clothes = listOf(
-                ClothesRequest(id = 1L, xCoord = 1.0, yCoord = 2.0, zIndex = 1, scale = 1.0),
-                ClothesRequest(id = 2L, xCoord = 3.0, yCoord = 4.0, zIndex = 2, scale = 1.5)
-            ),
-            category = OutfitCategory.SUMMER,
-            thumbnail = "https://thumbnail"
+        val clothesData = listOf(
+            ClothesData(clothesId = 1L, image = "img1", xCoord = 1.0, yCoord = 2.0, zIndex = 1, scale = 1.0),
+            ClothesData(clothesId = 2L, image = "img2", xCoord = 3.0, yCoord = 4.0, zIndex = 2, scale = 1.5)
         )
 
-        val result = service.createOutfit(userId, request)
+        val (outfit, savedClothes) = service.createOutfit(
+            userId = userId,
+            category = OutfitCategory.SUMMER,
+            thumbnail = "https://thumbnail",
+            clothesData = clothesData
+        )
 
-        assertThat(result.id).isNotNull()
-        assertThat(result.clothes).hasSize(2)
-        assertThat(outfitClothesRepo.findByOutfitId(result.id!!)).hasSize(2)
+        assertThat(outfit.id).isNotNull()
+        assertThat(savedClothes).hasSize(2)
+        assertThat(outfitClothesRepo.findByOutfitId(outfit.id!!)).hasSize(2)
     }
 
     @Test
@@ -87,19 +88,20 @@ class OutfitServiceTest {
         outfitRepo.save(Outfit(id = outfitId, userId = 1L, category = OutfitCategory.SUMMER, fixed = false, thumbnail = "https://old-thumb"))
         outfitClothesRepo.save(OutfitClothes(id = 1L, outfitId = outfitId, clothesId = 10L, image = "https://old", xCoord = 0.0, yCoord = 0.0, zIndex = 1, scale = 1.0))
 
-        val updateRequest = UpdateOutfitRequest(
-            clothes = listOf(
-                ClothesRequest(id = 20L, xCoord = 5.0, yCoord = 6.0, zIndex = 1, scale = 2.0),
-                ClothesRequest(id = 30L, xCoord = 7.0, yCoord = 8.0, zIndex = 2, scale = 1.5)
-            ),
-            category = OutfitCategory.WINTER
+        val clothesData = listOf(
+            ClothesData(clothesId = 20L, image = "img20", xCoord = 5.0, yCoord = 6.0, zIndex = 1, scale = 2.0),
+            ClothesData(clothesId = 30L, image = "img30", xCoord = 7.0, yCoord = 8.0, zIndex = 2, scale = 1.5)
         )
 
-        val result = service.updateOutfit(outfitId, updateRequest)
+        val (outfit, newClothes) = service.updateOutfit(
+            outfitId = outfitId,
+            category = OutfitCategory.WINTER,
+            clothesData = clothesData
+        )
 
-        assertThat(result.category).isEqualTo("winter")
-        assertThat(result.clothes).hasSize(2)
-        assertThat(result.clothes[0].id).isEqualTo(20L)
+        assertThat(outfit.category).isEqualTo(OutfitCategory.WINTER)
+        assertThat(newClothes).hasSize(2)
+        assertThat(newClothes[0].clothesId).isEqualTo(20L)
     }
 }
 

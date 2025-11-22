@@ -1,15 +1,23 @@
 package org.woowa.weathercodi.outfit.presentation
 
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.whenever
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.woowa.weathercodi.outfit.application.OutfitService
+import org.woowa.weathercodi.outfit.domain.Outfit
+import org.woowa.weathercodi.outfit.domain.OutfitCategory
+import org.woowa.weathercodi.outfit.domain.OutfitClothes
+import org.woowa.weathercodi.user.application.UserDeviceService
+import org.woowa.weathercodi.user.domain.User
 
 @WebMvcTest(controllers = [OutfitController::class])
 class OutfitControllerTest {
@@ -17,22 +25,27 @@ class OutfitControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
-    @MockBean
+    @MockitoBean
     lateinit var outfitService: OutfitService
+
+    @MockitoBean
+    lateinit var userDeviceService: UserDeviceService
 
     @Test
     fun `코디 목록 조회 API`() {
         val deviceUuid = "test-device-uuid"
-        whenever(outfitService.getOutfitList(deviceUuid)).thenReturn(
-            OutfitListResponse(
-                fixedOutfits = listOf(
-                    OutfitResponse(id = 1L, thumbnail = "https://fixed1"),
-                    OutfitResponse(id = 2L, thumbnail = "https://fixed2")
-                ),
-                outfits = listOf(
-                    OutfitResponse(id = 3L, thumbnail = "https://normal1"),
-                    OutfitResponse(id = 4L, thumbnail = "https://normal2")
-                )
+        val userId = 1L
+
+        `when`(userDeviceService.registerOrUpdateDevice(anyString())).thenReturn(
+            User(id = userId, deviceUuid = deviceUuid, lastAccessedAt = System.currentTimeMillis())
+        )
+
+        `when`(outfitService.getOutfitList(anyLong())).thenReturn(
+            listOf(
+                Outfit(id = 1L, userId = userId, category = OutfitCategory.SUMMER, fixed = true, thumbnail = "https://fixed1"),
+                Outfit(id = 2L, userId = userId, category = OutfitCategory.WINTER, fixed = true, thumbnail = "https://fixed2"),
+                Outfit(id = 3L, userId = userId, category = OutfitCategory.SUMMER, fixed = false, thumbnail = "https://normal1"),
+                Outfit(id = 4L, userId = userId, category = OutfitCategory.AUTUMN, fixed = false, thumbnail = "https://normal2")
             )
         )
 
@@ -49,22 +62,24 @@ class OutfitControllerTest {
 
     @Test
     fun `코디 상세 조회 API`() {
+        val deviceUuid = "test-device-uuid"
         val outfitId = 1L
-        whenever(outfitService.getOutfit(outfitId)).thenReturn(
-            OutfitDetailResponse(
-                id = outfitId,
-                thumbnail = "https://thumbnail",
-                category = "summer",
-                clothes = listOf(
-                    ClothesResponse(id = 10L, image = "https://clothes1"),
-                    ClothesResponse(id = 20L, image = "https://clothes2")
-                )
-            )
+
+        `when`(userDeviceService.registerOrUpdateDevice(anyString())).thenReturn(
+            User(id = 1L, deviceUuid = deviceUuid, lastAccessedAt = System.currentTimeMillis())
         )
+
+        val outfit = Outfit(id = outfitId, userId = 1L, category = OutfitCategory.SUMMER, fixed = false, thumbnail = "https://thumbnail")
+        val clothes = listOf(
+            OutfitClothes(id = 1L, outfitId = outfitId, clothesId = 10L, image = "https://clothes1", xCoord = 1.0, yCoord = 2.0, zIndex = 1, scale = 1.0),
+            OutfitClothes(id = 2L, outfitId = outfitId, clothesId = 20L, image = "https://clothes2", xCoord = 3.0, yCoord = 4.0, zIndex = 2, scale = 1.5)
+        )
+
+        `when`(outfitService.getOutfit(anyLong())).thenReturn(Pair(outfit, clothes))
 
         mockMvc.perform(
             get("/outfits/{id}", outfitId)
-                .header("X-DEVICE-ID", "test-device-uuid")
+                .header("X-DEVICE-ID", deviceUuid)
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.id").value(outfitId))
@@ -77,34 +92,34 @@ class OutfitControllerTest {
     @Test
     fun `코디 등록 API`() {
         val deviceUuid = "test-device-uuid"
-        val requestBody = """
-            {
-                "clothes": [
-                    {"id": 1, "xCoord": 1.0, "yCoord": 2.0, "zIndex": 1, "scale": 1.0},
-                    {"id": 2, "xCoord": 3.0, "yCoord": 4.0, "zIndex": 2, "scale": 1.5}
-                ],
-                "category": "SUMMER",
-                "thumbnail": "https://thumbnail"
-            }
+        val userId = 1L
+        val clothesJson = """
+            [
+                {"id": 1, "xCoord": 1.0, "yCoord": 2.0, "zIndex": 1, "scale": 1.0},
+                {"id": 2, "xCoord": 3.0, "yCoord": 4.0, "zIndex": 2, "scale": 1.5}
+            ]
         """.trimIndent()
 
-        whenever(outfitService.createOutfit(deviceUuid, any())).thenReturn(
-            CreateOutfitResponse(
-                id = 1L,
-                clothes = listOf(
-                    OutfitClothesResponse(id = 1L, image = "https://img1", xCoord = 1.0, yCoord = 2.0, zIndex = 1, scale = 1.0),
-                    OutfitClothesResponse(id = 2L, image = "https://img2", xCoord = 3.0, yCoord = 4.0, zIndex = 2, scale = 1.5)
-                ),
-                category = "summer",
-                thumbnail = "https://thumbnail"
-            )
+        `when`(userDeviceService.registerOrUpdateDevice(anyString())).thenReturn(
+            User(id = userId, deviceUuid = deviceUuid, lastAccessedAt = System.currentTimeMillis())
+        )
+
+        val outfit = Outfit(id = 1L, userId = userId, category = OutfitCategory.SUMMER, fixed = false, thumbnail = "https://saved-thumbnail-url/test.jpg")
+        val savedClothes = listOf(
+            OutfitClothes(id = null, outfitId = 1L, clothesId = 1L, image = "image-url-1", xCoord = 1.0, yCoord = 2.0, zIndex = 1, scale = 1.0),
+            OutfitClothes(id = null, outfitId = 1L, clothesId = 2L, image = "image-url-2", xCoord = 3.0, yCoord = 4.0, zIndex = 2, scale = 1.5)
+        )
+
+        `when`(outfitService.createOutfit(anyLong(), any(), anyString(), any())).thenReturn(
+            Pair(outfit, savedClothes)
         )
 
         mockMvc.perform(
-            post("/outfits")
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/outfits")
+                .file(org.springframework.mock.web.MockMultipartFile("clothes", "", "application/json", clothesJson.toByteArray()))
+                .file(org.springframework.mock.web.MockMultipartFile("category", "", "text/plain", "SUMMER".toByteArray()))
+                .file(org.springframework.mock.web.MockMultipartFile("thumbnail", "test.jpg", "image/jpeg", "test-image-content".toByteArray()))
                 .header("X-DEVICE-ID", deviceUuid)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody)
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.id").value(1))
@@ -114,19 +129,24 @@ class OutfitControllerTest {
 
     @Test
     fun `코디 삭제 API`() {
+        val deviceUuid = "test-device-uuid"
         val outfitId = 1L
+
+        `when`(userDeviceService.registerOrUpdateDevice(anyString())).thenReturn(
+            User(id = 1L, deviceUuid = deviceUuid, lastAccessedAt = System.currentTimeMillis())
+        )
 
         mockMvc.perform(
             delete("/outfits/{id}", outfitId)
-                .header("X-DEVICE-ID", "test-device-uuid")
+                .header("X-DEVICE-ID", deviceUuid)
         )
             .andExpect(status().isOk)
     }
 
     @Test
     fun `코디 수정 API`() {
-        val outfitId = 1L
         val deviceUuid = "test-device-uuid"
+        val outfitId = 1L
         val requestBody = """
             {
                 "clothes": [
@@ -137,16 +157,18 @@ class OutfitControllerTest {
             }
         """.trimIndent()
 
-        whenever(outfitService.updateOutfit(outfitId, any())).thenReturn(
-            UpdateOutfitResponse(
-                id = outfitId,
-                clothes = listOf(
-                    OutfitClothesResponse(id = 20L, image = "https://img20", xCoord = 5.0, yCoord = 6.0, zIndex = 1, scale = 2.0),
-                    OutfitClothesResponse(id = 30L, image = "https://img30", xCoord = 7.0, yCoord = 8.0, zIndex = 2, scale = 1.5)
-                ),
-                category = "winter",
-                thumbnail = "https://old-thumb"
-            )
+        `when`(userDeviceService.registerOrUpdateDevice(anyString())).thenReturn(
+            User(id = 1L, deviceUuid = deviceUuid, lastAccessedAt = System.currentTimeMillis())
+        )
+
+        val outfit = Outfit(id = outfitId, userId = 1L, category = OutfitCategory.WINTER, fixed = false, thumbnail = "https://old-thumb")
+        val newClothes = listOf(
+            OutfitClothes(id = null, outfitId = outfitId, clothesId = 20L, image = "image-url-20", xCoord = 5.0, yCoord = 6.0, zIndex = 1, scale = 2.0),
+            OutfitClothes(id = null, outfitId = outfitId, clothesId = 30L, image = "image-url-30", xCoord = 7.0, yCoord = 8.0, zIndex = 2, scale = 1.5)
+        )
+
+        `when`(outfitService.updateOutfit(anyLong(), any(), any())).thenReturn(
+            Pair(outfit, newClothes)
         )
 
         mockMvc.perform(

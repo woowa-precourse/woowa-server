@@ -19,3 +19,8 @@ cloud:
       secret-key: ${AWS_SECRET_KEY}
     region:
       static: ap-northeast-2
+
+weather:
+  api:
+    key: ${WEATHER_API_KEY}
+    base-url: https://api.openweathermap.org/data/2.5

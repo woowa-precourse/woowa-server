@@ -1,135 +1,136 @@
 package org.woowa.weathercodi.outfit.application
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import org.woowa.weathercodi.clothes.domain.ClothesRepository
+import org.woowa.weathercodi.global.exception.CustomException
+import org.woowa.weathercodi.global.exception.ErrorCode
 import org.woowa.weathercodi.outfit.domain.*
 
 @Service
 class OutfitService(
     private val outfitRepository: OutfitRepository,
-    private val outfitClothesRepository: OutfitClothesRepository
+    private val outfitClothesRepository: OutfitClothesRepository,
+    private val clothesRepository: ClothesRepository
 ) {
 
-    fun getOutfitList(userId: Long): OutfitListResponse {
-        val outfits = outfitRepository.findAllByUserId(userId)
-
-        val fixedOutfits = outfits
-            .filter { it.fixed }
-            .map { OutfitResponse(id = it.id!!, thumbnail = it.thumbnail) }
-
-        val normalOutfits = outfits
-            .filter { !it.fixed }
-            .map { OutfitResponse(id = it.id!!, thumbnail = it.thumbnail) }
-
-        return OutfitListResponse(
-            fixedOutfits = fixedOutfits,
-            outfits = normalOutfits
-        )
+    fun getOutfitList(userId: Long): List<Outfit> {
+        return outfitRepository.findAllByUserId(userId)
     }
 
-    fun getOutfit(outfitId: Long): OutfitDetailResponse {
+    fun getOutfit(outfitId: Long): Pair<Outfit, List<OutfitClothes>> {
         val outfit = outfitRepository.findById(outfitId)
-            ?: throw IllegalArgumentException("Outfit not found: $outfitId")
+            ?: throw CustomException(ErrorCode.OUTFIT_NOT_FOUND)
 
         val clothes = outfitClothesRepository.findByOutfitId(outfitId)
-            .map { ClothesDetailResponse(id = it.clothesId, image = it.image) }
 
-        return OutfitDetailResponse(
-            id = outfit.id!!,
-            thumbnail = outfit.thumbnail,
-            category = outfit.category.name.lowercase(),
-            clothes = clothes
-        )
+        return Pair(outfit, clothes)
     }
 
-    fun createOutfit(userId: Long, request: CreateOutfitRequest): CreateOutfitResponse {
+    fun createOutfit(userId: Long, category: OutfitCategory, thumbnail: String, clothesData: List<ClothesData>): Pair<Outfit, List<OutfitClothes>> {
+        // 옷 소유권 검증
+        clothesData.forEach { data ->
+            val clothes = clothesRepository.findById(data.clothesId)
+                ?: throw CustomException(ErrorCode.CLOTHES_NOT_FOUND)
+
+            if (clothes.userId != userId) {
+                throw CustomException(ErrorCode.CLOTHES_NOT_REGISTERED)
+            }
+        }
+
         val outfit = Outfit(
             userId = userId,
-            category = request.category,
+            category = category,
             fixed = false,
-            thumbnail = request.thumbnail
+            thumbnail = thumbnail
         )
 
         val savedOutfit = outfitRepository.save(outfit)
 
-        val savedClothes = request.clothes.map { clothesReq ->
+        val savedClothes = clothesData.map { data ->
             val outfitClothes = OutfitClothes(
                 outfitId = savedOutfit.id!!,
-                clothesId = clothesReq.id,
-                image = "image-url-${clothesReq.id}",
-                xCoord = clothesReq.xCoord,
-                yCoord = clothesReq.yCoord,
-                zIndex = clothesReq.zIndex,
-                scale = clothesReq.scale
+                clothesId = data.clothesId,
+                image = data.image,
+                xCoord = data.xCoord,
+                yCoord = data.yCoord,
+                zIndex = data.zIndex,
+                scale = data.scale
             )
             outfitClothesRepository.save(outfitClothes)
         }
 
-        return CreateOutfitResponse(
-            id = savedOutfit.id!!,
-            clothes = savedClothes.map {
-                OutfitClothesResponse(
-                    id = it.clothesId,
-                    image = it.image,
-                    xCoord = it.xCoord,
-                    yCoord = it.yCoord,
-                    zIndex = it.zIndex,
-                    scale = it.scale
-                )
-            },
-            category = savedOutfit.category.name.lowercase(),
-            thumbnail = savedOutfit.thumbnail
-        )
+        return Pair(savedOutfit, savedClothes)
     }
 
+    @Transactional
     fun deleteOutfit(outfitId: Long) {
         val outfit = outfitRepository.findById(outfitId)
-            ?: throw IllegalArgumentException("Outfit not found: $outfitId")
+            ?: throw CustomException(ErrorCode.OUTFIT_NOT_FOUND)
 
         outfitClothesRepository.deleteAllByOutfitId(outfitId)
         outfitRepository.delete(outfit)
     }
 
-    fun updateOutfit(outfitId: Long, request: UpdateOutfitRequest): UpdateOutfitResponse {
+    @Transactional
+    fun updateOutfit(outfitId: Long, category: OutfitCategory, clothesData: List<ClothesData>): Pair<Outfit, List<OutfitClothes>> {
         val outfit = outfitRepository.findById(outfitId)
-            ?: throw IllegalArgumentException("Outfit not found: $outfitId")
+            ?: throw CustomException(ErrorCode.OUTFIT_NOT_FOUND)
+
+        // 옷 소유권 검증
+        clothesData.forEach { data ->
+            val clothes = clothesRepository.findById(data.clothesId)
+                ?: throw CustomException(ErrorCode.CLOTHES_NOT_FOUND)
+
+            if (clothes.userId != outfit.userId) {
+                throw CustomException(ErrorCode.CLOTHES_NOT_REGISTERED)
+            }
+        }
 
         val updatedOutfit = outfit.update(
-            category = request.category,
+            category = category,
             fixed = outfit.fixed,
             thumbnail = outfit.thumbnail
         )
 
         outfitRepository.save(updatedOutfit)
-
         outfitClothesRepository.deleteAllByOutfitId(outfitId)
 
-        val newClothes = request.clothes.map { clothesReq ->
+        val newClothes = clothesData.map { data ->
             val outfitClothes = OutfitClothes(
                 outfitId = outfitId,
-                clothesId = clothesReq.id,
-                image = "image-url-${clothesReq.id}",
-                xCoord = clothesReq.xCoord,
-                yCoord = clothesReq.yCoord,
-                zIndex = clothesReq.zIndex,
-                scale = clothesReq.scale
+                clothesId = data.clothesId,
+                image = data.image,
+                xCoord = data.xCoord,
+                yCoord = data.yCoord,
+                zIndex = data.zIndex,
+                scale = data.scale
             )
             outfitClothesRepository.save(outfitClothes)
         }
 
-        return UpdateOutfitResponse(
-            id = updatedOutfit.id!!,
-            clothes = newClothes.map {
-                OutfitClothesResponse(
-                    id = it.clothesId,
-                    image = it.image,
-                    xCoord = it.xCoord,
-                    yCoord = it.yCoord,
-                    zIndex = it.zIndex,
-                    scale = it.scale
-                )
-            },
-            category = updatedOutfit.category.name.lowercase(),
-            thumbnail = updatedOutfit.thumbnail
+        return Pair(updatedOutfit, newClothes)
+    }
+
+    fun toggleFixedOutfit(outfitId: Long): Outfit {
+        val outfit = outfitRepository.findById(outfitId)
+            ?: throw CustomException(ErrorCode.OUTFIT_NOT_FOUND)
+
+        val updatedOutfit = outfit.update(
+            category = outfit.category,
+            fixed = !outfit.fixed,
+            thumbnail = outfit.thumbnail
         )
+
+        return outfitRepository.save(updatedOutfit)
     }
 }
+
+data class ClothesData(
+    val clothesId: Long,
+    val image: String,
+    val xCoord: Double,
+    val yCoord: Double,
+    val zIndex: Int,
+    val scale: Double
+)
