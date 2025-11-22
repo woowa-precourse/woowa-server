@@ -1,4 +1,4 @@
-package org.woowa.weathercodi.clothes.presentation
+package org.woowa.weathercodi.clothes.infrastructure
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.woowa.weathercodi.clothes.domain.Category

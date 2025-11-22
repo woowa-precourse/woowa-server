@@ -1,4 +1,4 @@
-package org.woowa.weathercodi.clothes.presentation
+package org.woowa.weathercodi.clothes.infrastructure
 
 import jakarta.persistence.Column
 import jakarta.persistence.*

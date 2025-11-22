@@ -6,8 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.woowa.weathercodi.clothes.domain.Category
 import org.woowa.weathercodi.clothes.domain.SubCategory
-import org.woowa.weathercodi.clothes.presentation.ClothesJpaEntity
-import org.woowa.weathercodi.clothes.presentation.ClothesJpaRepository
 
 @DataJpaTest
 class ClothesRepositoryTest(
