@@ -28,7 +28,7 @@ class WeatherApiClient(
         val url = "$openMeteoBaseUrl/forecast?latitude=$lat&longitude=$lon" +
                 "&current=temperature_2m,weather_code,relative_humidity_2m,apparent_temperature" +
                 "&hourly=temperature_2m,weather_code,relative_humidity_2m,apparent_temperature" +
-                "&timezone=Asia/Seoul&forecast_days=1"
+                "&timezone=Asia/Seoul&forecast_days=2"
         return restTemplate.getForObject(url, OpenMeteoResponse::class.java)
             ?: throw RuntimeException("Failed to fetch Open-Meteo weather data")
     }

@@ -67,17 +67,36 @@ class TodayService(
             !hourTime.isBefore(now)
         }.let { if (it == -1) 0 else it }
 
-        // 현재 시간부터 5시간 예보 (현재 포함, 0~4시간 후)
-        val hourlyForecasts = (currentHourIndex until minOf(currentHourIndex + 5, openMeteoData.hourly.time.size))
-            .map { index ->
-                val timeStr = openMeteoData.hourly.time[index]
+        // 지금부터 24시간 뒤 시각
+        val endTime = now.plusHours(24)
 
-                HourlyWeatherData(
-                    temperature = openMeteoData.hourly.temperature_2m[index],
-                    weather = wmoCodeToDescription(openMeteoData.hourly.weather_code[index]),
-                    timestamp = timeStr
-                )
-            }
+        // endTime 이후가 되는 첫 index
+        val endIndexExclusive = openMeteoData.hourly.time.indexOfFirst { timeStr ->
+            val hourTime = LocalDateTime.parse(timeStr, formatter)
+            hourTime.isAfter(endTime)
+        }.let { if (it == -1) openMeteoData.hourly.time.size else it }
+
+        // 범위: currentHourIndex ~ endIndexExclusive-1
+        val hourlyForecasts = (currentHourIndex until endIndexExclusive).map { index ->
+            val timeStr = openMeteoData.hourly.time[index]
+            HourlyWeatherData(
+                temperature = openMeteoData.hourly.temperature_2m[index],
+                weather = wmoCodeToDescription(openMeteoData.hourly.weather_code[index]),
+                timestamp = timeStr
+            )
+        }
+
+        // 현재 시간부터 24시간 예보 (현재 포함, 0~4시간 후)
+//        val hourlyForecasts = (currentHourIndex until minOf(currentHourIndex + 24, openMeteoData.hourly.time.size))
+//            .map { index ->
+//                val timeStr = openMeteoData.hourly.time[index]
+//
+//                HourlyWeatherData(
+//                    temperature = openMeteoData.hourly.temperature_2m[index],
+//                    weather = wmoCodeToDescription(openMeteoData.hourly.weather_code[index]),
+//                    timestamp = timeStr
+//                )
+//            }
 
         // 온도 기반 계절 판단 (현재 온도 기준)
         val season = getSeasonFromTemperature(currentTemp)

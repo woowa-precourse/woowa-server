@@ -9,12 +9,11 @@ import org.woowa.weathercodi.clothes.domain.SubCategory
 import org.woowa.weathercodi.global.s3.ImageStorageService
 import org.woowa.weathercodi.user.application.UserDeviceService
 
-
 @RestController
 @RequestMapping("/clothes")
 class ClothesController(
     private val clothesService: ClothesService,
-    private val imageStorageService: ImageStorageService, // 이미지 업로드 서비스(이미 만들어져 있다고 가정)
+    private val imageStorageService: ImageStorageService,
     private val userDeviceService: UserDeviceService
 ) {
 
