@@ -1,5 +1,6 @@
 package org.woowa.weathercodi.outfit.presentation
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.swagger.v3.oas.annotations.Parameter
@@ -59,7 +60,7 @@ class OutfitController(
             id = outfit.id!!,
             thumbnail = outfit.thumbnail,
             category = outfit.category.name.lowercase(),
-            clothes = clothes.map { ClothesDetailResponse(id = it.clothesId, image = it.image) }
+            clothes = clothes.map { OutfitClothesResponse(id = it.clothesId, image = it.image, xCoord = it.xCoord, yCoord = it.yCoord, zIndex = it.zIndex, scale = it.scale) }
         )
     }
 

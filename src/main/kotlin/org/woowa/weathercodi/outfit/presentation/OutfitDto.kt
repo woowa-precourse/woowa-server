@@ -71,7 +71,7 @@ data class OutfitDetailResponse(
     val id: Long,
     val thumbnail: String,
     val category: String,
-    val clothes: List<ClothesDetailResponse>
+    val clothes: List<OutfitClothesResponse>
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
