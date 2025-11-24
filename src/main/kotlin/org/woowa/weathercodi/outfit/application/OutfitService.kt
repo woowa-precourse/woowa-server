@@ -73,7 +73,7 @@ class OutfitService(
     }
 
     @Transactional
-    fun updateOutfit(outfitId: Long, category: OutfitCategory, clothesData: List<ClothesData>): Pair<Outfit, List<OutfitClothes>> {
+    fun updateOutfit(outfitId: Long, thumbnail: String, category: OutfitCategory, clothesData: List<ClothesData>): Pair<Outfit, List<OutfitClothes>> {
         val outfit = outfitRepository.findById(outfitId)
             ?: throw CustomException(ErrorCode.OUTFIT_NOT_FOUND)
 
@@ -90,7 +90,7 @@ class OutfitService(
         val updatedOutfit = outfit.update(
             category = category,
             fixed = outfit.fixed,
-            thumbnail = outfit.thumbnail
+            thumbnail = thumbnail
         )
 
         outfitRepository.save(updatedOutfit)

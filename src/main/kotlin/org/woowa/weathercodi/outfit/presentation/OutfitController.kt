@@ -139,18 +139,43 @@ class OutfitController(
         outfitService.deleteOutfit(id)
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id}", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun updateOutfit(
         @RequestHeader("X-DEVICE-ID") deviceUuid: String,
         @PathVariable id: Long,
-        @RequestBody request: UpdateOutfitRequest
+        @RequestPart("clothes")
+        @Parameter(
+            description = "옷 리스트 (JSON 문자열 형식)",
+            example = """[{"id":1,"xCoord":10,"yCoord":20,"zIndex":1,"scale":1}]"""
+        )
+        clothes: String,
+        @RequestPart("category")
+        @Parameter(
+            description = "카테고리 (SPRING, SUMMER, AUTUMN, WINTER)",
+            example = "SPRING"
+        )
+        category: String,
+        @RequestPart("thumbnail") thumbnail: MultipartFile
     ): UpdateOutfitResponse {
         userDeviceService.registerOrUpdateDevice(deviceUuid)
 
-        val clothesData = request.clothes.map {
+        val thumbnailUrl = imageStorageService.uploadOutfitThumbnail(deviceUuid, thumbnail)
+
+        val clothesList: List<ClothesRequest> = objectMapper.readValue(clothes)
+
+        val categoryEnum = try {
+            OutfitCategory.valueOf(category.uppercase())
+        } catch (e: IllegalArgumentException) {
+            throw CustomException(ErrorCode.INVALID_OUTFIT_CATEGORY)
+        }
+
+        val clothesData = clothesList.map {
+            val clothesEntity = clothesRepository.findById(it.id)
+                ?: throw CustomException(ErrorCode.CLOTHES_NOT_FOUND)
+
             ClothesData(
                 clothesId = it.id,
-                image = "image-url-${it.id}",
+                image = clothesEntity.image,
                 xCoord = it.xCoord,
                 yCoord = it.yCoord,
                 zIndex = it.zIndex,
@@ -158,15 +183,16 @@ class OutfitController(
             )
         }
 
-        val (outfit, newClothes) = outfitService.updateOutfit(
+        val (outfit, updatedClothes) = outfitService.updateOutfit(
             outfitId = id,
-            category = request.category,
+            category = categoryEnum,
+            thumbnail = thumbnailUrl,
             clothesData = clothesData
         )
 
         return UpdateOutfitResponse(
             id = outfit.id!!,
-            clothes = newClothes.map {
+            clothes = updatedClothes.map {
                 OutfitClothesResponse(
                     id = it.clothesId,
                     image = it.image,

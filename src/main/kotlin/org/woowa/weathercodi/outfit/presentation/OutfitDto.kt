@@ -49,7 +49,7 @@ data class CreateOutfitRequest(
 
 data class UpdateOutfitRequest(
     val clothes: List<ClothesRequest>,
-    val category: OutfitCategory
+    val category: OutfitCategory,
 )
 
 data class OutfitResponse(
