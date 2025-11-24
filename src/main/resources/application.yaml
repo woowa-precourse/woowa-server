@@ -24,3 +24,5 @@ weather:
   api:
     key: ${WEATHER_API_KEY}
     base-url: https://api.openweathermap.org/data/2.5
+  open-meteo:
+    base-url: https://api.open-meteo.com/v1
