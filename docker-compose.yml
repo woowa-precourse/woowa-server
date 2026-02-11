@@ -14,13 +14,15 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+
   app:
     image: xioz19/weathercodi:latest
     container_name: weathercodi-app
-    restart: always
+    restart: unless-stopped
     depends_on:
       - postgres
     environment:
+      JAVA_TOOL_OPTIONS: "-Xms512m -Xmx1024m"
       DB_URL: ${DB_URL}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
